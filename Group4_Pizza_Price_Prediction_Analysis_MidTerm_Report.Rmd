@@ -51,6 +51,7 @@ library(dplyr)
 library(readr)
 library(ggplot2)
 library(sqldf)
+library(randomForest)
 ```
 
 ## Read Dataset
@@ -213,3 +214,7 @@ While a more complicated model tends to require more compute resources to train,
 We will be testing our hypothesis by looking at the accuracy rates for both the simpler model, and the more complex model. The model with the higher accuracy score will be the one recommended for use in the final report.
 
 The main challenge that could cause issues is our relative lack of experience using R for machine learning. While some in our group have experience using machine learning models, that experience is in Python. This isn't an impossible obstacle to overcome, since we will be learning about modelling packages in R later in the course.
+
+```{r model lm}
+
+```
