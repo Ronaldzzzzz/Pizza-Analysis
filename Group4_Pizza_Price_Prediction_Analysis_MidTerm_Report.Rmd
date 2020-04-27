@@ -52,6 +52,7 @@ library(readr)
 library(ggplot2)
 library(sqldf)
 library(randomForest)
+require(caTools)
 ```
 
 ## Read Dataset
@@ -215,6 +216,24 @@ We will be testing our hypothesis by looking at the accuracy rates for both the 
 
 The main challenge that could cause issues is our relative lack of experience using R for machine learning. While some in our group have experience using machine learning models, that experience is in Python. This isn't an impossible obstacle to overcome, since we will be learning about modelling packages in R later in the course.
 
-```{r model lm}
+```{r model lm preprocess}
+set.seed(42)
+pizza_info_modelling <- pizza %>% 
+  select(id, address, categories, primaryCategories, 
+         city, keys, latitude, longitude, name, postalCode, 
+         province, priceRangeMin, priceRangeMax)
 
+pizza_info_modelling$avgPrice <- (pizza_info_modelling$priceRangeMin + pizza_info_modelling$priceRangeMax) / 2
+
+pizza_info_modelling$id <- 1:nrow(pizza_info_modelling)
+train <- pizza_info_modelling %>% sample_frac(0.75)
+test  <- anti_join(pizza_info_modelling, train, by = 'id')
+test$avgPrice <- NULL
 ```
+
+```{r model lm}
+linear_model <- lm(avgPrice ~ city, pizza_info_modelling)
+```
+
+```{r model rf}
+random_forest <- randomForest()
