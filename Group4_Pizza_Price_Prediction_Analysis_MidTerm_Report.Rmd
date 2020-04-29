@@ -52,7 +52,8 @@ library(readr)
 library(ggplot2)
 library(sqldf)
 library(randomForest)
-require(caTools)
+library(caTools)
+library(dummies)
 ```
 
 ## Read Dataset
@@ -223,17 +224,66 @@ pizza_info_modelling <- pizza %>%
          city, keys, latitude, longitude, name, postalCode, 
          province, priceRangeMin, priceRangeMax)
 
+pizza_info_modelling$city <- as.factor(pizza_info_modelling$city)
+
 pizza_info_modelling$avgPrice <- (pizza_info_modelling$priceRangeMin + pizza_info_modelling$priceRangeMax) / 2
 
+# create a dummy variable for city
+#pizza_info_dummies <- dummy.data.frame(pizza_info_modelling$city, names=c("City_"), sep="_")
+
+# split our data into training and test sets to determine accuracy
 pizza_info_modelling$id <- 1:nrow(pizza_info_modelling)
-train <- pizza_info_modelling %>% sample_frac(0.75)
+train <- pizza_info_modelling %>% 
+  sample_frac(0.75)
 test  <- anti_join(pizza_info_modelling, train, by = 'id')
 test$avgPrice <- NULL
 ```
 
 ```{r model lm}
-linear_model <- lm(avgPrice ~ city, pizza_info_modelling)
+linear_model <- lm(avgPrice ~ province, data = train)
+prediction <- predict(linear_model, test)
+#summary(linear_model)
 ```
 
 ```{r model rf}
-random_forest <- randomForest()
+random_forest <- randomForest(avgPrice ~ province, data = train)
+predict(random_forest, test)
+#summary(random_forest)
+```
+
+## Model Improvements 
+
+While both models perform fairly well, the linear model is much quicker to train. The downside is that both models are looking only at one variable: the state that the pizza establishment resides in. The second issue is that due to a lack of data for pricing, several values in the training and testing set are the same. To fix this, we can perturbate the data in both the training and testing sets to better reflect the variablity in pricing that would exist in the real world. Part of this will involve increasing the values and decreasing the values at random. We will weight this further with lists of the most expensive cities and the least expensive cities. 
+
+```{r data augmentation}
+expensive_cities <- c("New York", "Brooklyn", "Los Angeles", "Chicago", "Philadelphia", "San Francisco", "Boston", "Miami", "San Diego")
+cheap_cities <- c("Fort Wayne", "Abilene", "Memphis", "Indianapolis", "Omaha", "Columbus", "San Antonio", "Birmingham", "Buffalo")
+
+set.seed(as.integer(as.POSIXct(Sys.time())))
+
+if(pizza_info_modelling$city %in% expensive_cities) {
+  pizza_info_modelling$avgPrice <- pizza_info_modelling$avgPrice + (pizza_info_modelling$avgPrice * runif(1, min = .2, max = .3))
+} else if(pizza_info_modelling$city %in% cheap_cities){
+  pizza_info_modelling$avgPrice <- pizza_info_modelling$avgPrice - (pizza_info_modelling$avgPrice * runif(1, min = -0.3, max = -0.1))
+} else {
+  pizza_info_modelling$avgPrice <- pizza_info_modelling$avgPrice + (pizza_info_modelling$avgPrice * runif(1, min = -1, max = 1))
+}
+
+train <- pizza_info_modelling %>% 
+  sample_frac(0.75)
+test  <- anti_join(pizza_info_modelling, train, by = 'id')
+test$avgPrice <- NULL
+```
+
+Now let's try adding some more features to our perturbated data.
+
+```{r testing}
+train$expensive_city
+```
+
+
+```{r lm augmented}
+linear_model_augmented <- lm(avgPrice ~ province, data = train)
+prediction <- predict(linear_model_augmented, test)
+summary(linear_model_augmented)
+```
