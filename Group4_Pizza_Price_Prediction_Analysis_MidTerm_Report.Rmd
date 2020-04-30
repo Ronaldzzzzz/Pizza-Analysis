@@ -1,16 +1,13 @@
 ---
 title: "Pizza price prediction and Location analysis"
-subtitle: "MidTerm Report"
+subtitle: "Midterm Report"
 author: "KunJung Lin, Roshan Kotian, Mark Trovinger"
 date: "3/18/2020"
 output: 
-  html_document : 
-    theme: cosmo
-    highlight: monochrome
+  pdf_document : 
     toc: true
-    toc_float: false
+    number_sections: true
     toc_depth: 4
-    code_folding: hide
 ---
 
 <style>
@@ -30,39 +27,43 @@ pre {
 </style>
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
 ```
 
-## Description of Dataset
-The dataset in question is from Datafiniti, a company that provides businesses with a wide variety of information on retail products, properties and companies. The data is a list of over 3500 pizzas from multiple restaurants across the United States. 
+# Description of Dataset
+The dataset in question is from Datafiniti, a company that provides businesses with a wide variety of information on retail products, properties, and companies. The data is a list of over 3500 pizzas from multiple restaurants across the United States. 
 
-The dataset is 4.7 MB unzipped, which doesn’t make the dataset *big data* by any definition, but has 10,000 rows, which makes it large enough for our purposes.  
+The dataset is 4.7 MB unzipped, which does not make the big dataset *data* by any definition, but has 10,000 rows, which makes it large enough for our purposes.  
 
-## Purpose of this project
-The purpose of this project is to present a theoretical business owner a workup of what the likely price should be for new pizzas. To do so, we will be using two different predictive models, one that is simpler and one that is more complex. The purpose of having two different models is to illustrate how much value could be derived from a more complex approach to solving the problem versus a simpler, cheaper solution.
+# Purpose of this project
+The purpose of this project is to present a theoretical business owner with a workup of what the likely price should be for new pizzas. To do so, we will be using two different predictive models, one that is simpler and one that is more complex. The purpose of having two different models is to illustrate how much value could be derived from a more sophisticated approach to solving the problem versus a more straightforward, cheaper solution.
 
-## Intended audience for project
-The intended audience for this project would be the owner of a pizza restaurant that is looking to potentially expand their business or a new owner looking to get started in the pizza business. The final report should not be overly technical, as making a report too technical can often turn off stakeholders and make it more likely that a proposed solution will not be implemented. 
+# Intended audience for project
+The intended audience for this project would be the owner of a pizza restaurant that is looking to potentially expand its business or a new owner looking to get started in the pizza business. The final report should not be overly technical, as making a report too technical can often turn off stakeholders and make it more likely that a proposed solution will not be implemented. 
 
-## Import Libraries
-```{r, message=FALSE, warning=FALSE}
+```{r library, message=FALSE, warning=FALSE}
+# Import libraries
 library(tidyverse)
 library(dplyr)
 library(readr)
 library(ggplot2)
 library(sqldf)
+library(knitr)
+library(kableExtra)
 ```
 
-## Read Dataset
-To prevent to modify the original dataset, we copy whole data to `pizza` and do the tidying or manipulating.
-```{r, message=FALSE, warning=FALSE}
+```{r read_data, message=FALSE, warning=FALSE}
+# Read Dataset
+# Copy whole data to `pizza` and do the tidying or manipulating
 raw_pizza <- read_csv("Datafiniti_Pizza_Restaurants_and_the_Pizza_They_Sell_May19.csv")
 pizza <- raw_pizza
 ```
 
-## Manipulate the Dataset
-### Remove the Columns Have the Same Value
-```{r}
+# Manipulate (tidy) the Dataset
+
+* Remove the Columns Have the Same Value
+```{r tidy_1}
 pizza$country <- NULL
 #All "US"
 
@@ -71,20 +72,21 @@ pizza$priceRangeCurrency <- NULL
 #All "USD"
 ```
 
-## Select Specific Columns to Data Frame
-We split some columns to another table because for some predictions, we don't need to use so wide data frame. 
-If we can split them into some small data frame, if can make the data frame more readable and useable.
-As this point, we split it into two tables, which are `pizza_store_info` and `pizza_info`.
+* Select Specific Columns to Data Frame
 
-* `pizza_store_info` stores the information about the store itself.
-* `pizza_info` stores the information about pizzas and using `id` to connect with `pizza_store_info`.
+  We split some columns to another table because for some predictions, we do not need to use such a wide data frame. 
+  If we can split them into some small data frame, it can make the data frame more readable and useable.
+  At this point, we split it into two tables, which are `pizza_store_info` and `pizza_info`.
 
-After we do some research, the `menus.amountMax` and `menus.amountMin` might mean one specific flavor of pizza that has the price for a whole pizza or a slice if two values are different. 
-To use the data correctly, we need to check the `menus.description` and `menus.name` to see if there has some detail of the price of not.
-At the same time, we also need to remove the data that the `menus.amountMax` or `menus.amountMin` is `0`.
+  + `pizza_store_info` stores the information about the store.
+  + `pizza_info` stores the information about pizzas and using `id` to connect with `pizza_store_info`.
+
+  After we do some research, the `menus.amountMax` and `menus.amountMin` might mean one specific flavor of pizza that has the price for a whole pizza or a slice if two values are different. 
+  To use the data correctly, we need to check the `menus.description` and `menus.name` to see if there has some detail of the price of not.
+  At the same time, we also need to remove the data that the `menus.amountMax` or `menus.amountMin` is `0`.
 
 For the `pizza`, we still keep this variable. In case we need to use the data that has been removed.
-```{r}
+```{r tidy_2}
 # Select the information of pizza store.
 pizza_store_info <- pizza %>% 
   select(id, address, categories, primaryCategories, 
@@ -102,32 +104,41 @@ pizza_info <- pizza %>%
 pizza_info <- pizza_info[!(pizza_info$menus.amountMax == 0.00 | pizza_info$menus.amountMin == 0.00),]
 ```
 
-## Correct the Data Type of Data Frame
-After some manipulate, then we need to do correct some data type of columns. 
-For example, `province` should be a factor instead of character.
-<!--
-pizza_store_info $ categories might need do something
--->
-```{r}
+* Correct the Data Type of Data Frame
+
+  After some manipulate, then we need to do correct some data type of columns. 
+  For example, `province` should be a factor instead of character.
+
+```{r tidy_3}
 pizza_store_info$province <- as.factor(pizza_store_info$province)
 pizza$province <- as.factor(pizza$province)
 
 ```
-## Summary of the Data Frame
-```{r}
+* Summary of the Data Frame
+```{r summary_1}
 # pizza
-summary(pizza)
-
-# pizza_info
-summary(pizza_info)
-
-# pizza_store_info
-summary(pizza_store_info)
+head(pizza) %>%
+  select(city, province, address, name, menus.amountMax, menus.name) %>%
+  kable(booktabs = T, align = "lccccc", "pandoc", caption = "Summary of `pizza`") 
 ```
 
-## Renaming column names of pizza_info dataset for better readability
-**Pizza_Info** data set consists of raw column names which can be modified to more informational names for better readability
-```{r}
+\newpage
+```{r summary_2}
+# pizza_info
+head(pizza_info) %>%
+  select(menus.amountMax, menus.name) %>%
+  kable(booktabs = T, align = "cc", "pandoc", caption = "Summary of `pizza_info`") 
+
+# pizza_store_info
+head(pizza_store_info) %>%
+  select(city, province, address, name) %>%
+  kable(booktabs = T, align = "lccc", "pandoc", caption = "Summary of `pizza_store_info`") 
+```
+
+* Renaming column names of pizza_info dataset for better readability
+
+  `pizza_info` data set consists of raw column names which can be modified to more informational names for better readability
+```{r tidy_4}
 
 names(pizza_info)[names(pizza_info)=="menus.amountMax"] <- "pizzaMaxPrice"
 names(pizza_info)[names(pizza_info)=="menus.amountMin"] <- "pizzaMinPrice"
@@ -137,20 +148,21 @@ names(pizza_info)[names(pizza_info)=="menus.name"] <- "pizzaName"
 ```
 
 
-## Visualize the Data
-```{r plot1, warning=FALSE}
+# Visualize the Data
+```{r visu_plot1, warning=FALSE, fig.height = 4, fig.width = 5, fig.align = "center"}
 # Show the top 25 number of store sorted by province
 
 pizza_store_count <- pizza_store_info %>% group_by(province) %>% summarise(num = n())
 pizza_store_count <- arrange(pizza_store_count, -num)
 
-ggplot(pizza_store_count[1:25,], aes( x = reorder(province,-num), y = num, fill = province)) + 
+ggplot(pizza_store_count[1:10,], aes( x = reorder(province,-num), y = num, fill = province)) + 
   geom_histogram(stat="identity", position="identity") +
-  labs(x = 'States', y = "Number")
+  labs(x = 'States', y = "Pizza store number") + 
+  ggtitle("Top 10 City has the most pizza stores")
 
 ```
 
-```{r plot2}
+```{r visu_plot2, fig.height = 4, fig.width = 7, fig.align = "center"}
 # Show the menu.amountMax(< 75) of all the pizza
 
 pizza %>%
@@ -158,12 +170,12 @@ pizza %>%
   ggplot(aes(x = province, y = menus.amountMax, color = province)) + 
   geom_point() +
   theme(axis.text.x = element_text(size = 9, angle = 90, vjust = 0.4))+
-  labs(x = 'States', y = "Max Amount")
+  labs(x = 'States', y = "Max Amount") +
+  ggtitle("Pizza price in different state")
+
 ```
 
-
-
-```{r plot3}
+```{r visu_plot3, fig.height = 5, fig.width = 7, fig.align = "center"}
 # City having more than 100 pizza places
 
 pizza_places_per_city <- sqldf("select city, count(name) as pizza_places
@@ -172,19 +184,19 @@ pizza_places_per_city <- sqldf("select city, count(name) as pizza_places
                                     having count(name) > 100
                                     order by pizza_places desc")
 
-
 # Boxplot visualization
-ggplot(pizza_places_per_city, aes(x = city, y = pizza_places, fill = city)) +
-  geom_bar(stat = "identity", width=0.3 ) +
+ggplot(pizza_places_per_city, aes(x = reorder(city, pizza_places), y =  pizza_places, fill = city)) +
+  geom_bar(stat = "identity", width=0.5 ) +
   theme(axis.text.x = element_text(size  = 10,
-                                angle = 45,
                                 hjust = 1,
                                 vjust = 1)) +
-  ggtitle("City having more than 100 pizza places")
+  labs(x = "City", y = "Pizza places") + 
+  ggtitle("City having more than 100 pizza places") + 
+  coord_flip()
 
 ```
 
-```{r plot4}
+```{r visu_plot4, fig.height = 5, fig.width = 8, fig.align = "center" }
 # Commonly sold pizza menu across states
 
 most_ordered_menu <- sqldf("select pizzaName, count(pizzaName) as total_sold
@@ -193,23 +205,22 @@ most_ordered_menu <- sqldf("select pizzaName, count(pizzaName) as total_sold
                             having total_sold > 75
                             order by total_sold desc")
 
-ggplot(most_ordered_menu, aes(x = pizzaName , y = total_sold , fill = pizzaName)) +
+ggplot(most_ordered_menu, aes(x = reorder(pizzaName, total_sold), y = total_sold , fill = pizzaName)) +
   geom_bar(position = "stack", stat = "identity", width = 0.5) +
   theme(axis.text.x = element_text(size =10,
-                                   angle = 45,
                                    hjust = 1,
                                    vjust = 1)) +
-  ggtitle("Commonly sold pizza menu across states")
-
-
+  labs(x = "Pizza Flavor", y = "Total sold") + 
+  ggtitle("Commonly sold pizza menu across states") + 
+  coord_flip()
 ```
 
-## Model details
+# Model details
 
-The goal of the predictive model will be used in pricing pizza. Our hypothesis is that a more complex model, such as Random Forest Regression, will have a greater accuracy in predicting pricing than a simpler model, such as Linear Regression. 
+The goal of the predictive model will be used in pricing pizza. We hypothesize that a more complex model, such as Random Forest Regression, will have a greater accuracy in predicting pricing than a simpler model, such as Linear Regression. 
 
-While a more complicated model tends to require more compute resources to train, the trade-off is that the more complex model performs better, oftentimes dramatically. In this case, the difference in required compute resources is probably fairly small, but it would be interesting to see how well the two models compared.
+While a more complicated model tends to require more compute resources to train, the trade-off is that the more complex model performs better, frequently dramatically. In this case, the difference in required compute resources is probably fairly small, but it would be interesting to see how well the two models compared.
 
-We will be testing our hypothesis by looking at the accuracy rates for both the simpler model, and the more complex model. The model with the higher accuracy score will be the one recommended for use in the final report.
+We will be testing our hypothesis by looking at the accuracy rates for both the simpler model, and the more complex model. The model with a higher accuracy score will be the one recommended for use in the final report.
 
-The main challenge that could cause issues is our relative lack of experience using R for machine learning. While some in our group have experience using machine learning models, that experience is in Python. This isn't an impossible obstacle to overcome, since we will be learning about modelling packages in R later in the course.
+The main challenge that could cause issues is our relative lack of experience using R for machine learning. While some in our group have experience using machine learning models, that experience is in Python. This is not an impossible obstacle to overcome, since we will be learning about modelling packages in R later in the course.
