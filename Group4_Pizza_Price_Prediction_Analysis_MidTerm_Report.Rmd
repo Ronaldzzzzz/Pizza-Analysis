@@ -1,6 +1,6 @@
 ---
 title: "Pizza price prediction and Location analysis"
-subtitle: "Midterm Report"
+subtitle: "Final Report"
 author: "KunJung Lin, Roshan Kotian, Mark Trovinger"
 date: "3/18/2020"
 output: 
@@ -52,7 +52,7 @@ library(sqldf)
 library(randomForest)
 library(knitr)
 library(kableExtra)
-
+library(statisticalModeling)
 ```
 
 ```{r read_data, message=FALSE, warning=FALSE}
@@ -218,7 +218,7 @@ ggplot(most_ordered_menu, aes(x = reorder(pizzaName, total_sold), y = total_sold
 ```
 
 
-## Model Proposal
+# Model Proposal
 
 The goal of the predictive model will be used in pricing pizza. We hypothesize that a more complex model, such as Random Forest Regression, will have a greater accuracy in predicting pricing than a simpler model, such as Linear Regression. 
 
@@ -230,11 +230,11 @@ The main challenge that could cause issues is our relative lack of experience us
 
 
 
-## Model Implementation
+# Model Implementation
 
 In this section, we will be discussing implementing the two models chosen for this project, Linear Regression and Random Forest Regression.
 
-### Data Preprocessing
+## Data Preprocessing
 
 Before we can start building models, we need to prepare our data for the model building process. To start we create a data.frame that contains a subset of the dataset that includes both the pizza information and the store information. In order to have a response variable to build a model with, we will create a new column, avgPrice, that adds the minimum and maximum prices and divides by the number of menu items. Since we don't have the number of menu items, we can make an educated guess that it will be between 5 and 10 menu items. 
 
@@ -253,7 +253,7 @@ pizza_info_modelling$avgPrice <- (pizza_info_modelling$priceRangeMin + pizza_inf
 
 ```
 
-### Linear Regression
+## Linear Regression
 
 Now that we have a response variable to test against, we can look at the first model we tested for the project, Linear Regression. Linear Regression is a model that can be trained and deployed quickly, requiring far less compute resources than other, more complicated models. Because we are looking at the geographic location for how to price an average item from a pizza restraunt, it makes sense to examine the three location based variables in our data; city, state, and ZIP code.
 
@@ -262,7 +262,7 @@ linear_model <- lm(avgPrice ~ city + province + postalCode, data = pizza_info_mo
 ```
 
 
-### Random Forest Regression
+## Random Forest Regression
 
 Much like the Linear Regression model, the Random Forest will examine the relationship between the response variable and the dependent variables. Unlike with linear regression, random forests won't work with factors that have greater than 52 levels. For the purposes of the project, it means we are unable to use the city parameter from our data.
 
@@ -270,7 +270,7 @@ Much like the Linear Regression model, the Random Forest will examine the relati
 random_forest <- randomForest(avgPrice ~ province + postalCode, data = pizza_info_modelling, na.action = na.omit)
 ```
 
-### Model Comparison
+## Model Comparison
 
 For the purposes of comparing the two models, we will look at the Mean Squared Error for both the Linear Regression model, and the Random Forest model. In the case of the Random Forest model, we need to look at the final element in the array mse, as it contains the cumulative MSE for the entire forest.
 
