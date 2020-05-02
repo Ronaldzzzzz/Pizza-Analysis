@@ -52,7 +52,7 @@ library(sqldf)
 library(randomForest)
 library(knitr)
 library(kableExtra)
-library(statisticalModeling)
+
 ```
 
 ```{r read_data, message=FALSE, warning=FALSE}
