@@ -49,8 +49,10 @@ library(dplyr)
 library(readr)
 library(ggplot2)
 library(sqldf)
+library(randomForest)
 library(knitr)
 library(kableExtra)
+
 ```
 
 ```{r read_data, message=FALSE, warning=FALSE}
@@ -215,7 +217,8 @@ ggplot(most_ordered_menu, aes(x = reorder(pizzaName, total_sold), y = total_sold
   coord_flip()
 ```
 
-# Model details
+
+## Model Proposal
 
 The goal of the predictive model will be used in pricing pizza. We hypothesize that a more complex model, such as Random Forest Regression, will have a greater accuracy in predicting pricing than a simpler model, such as Linear Regression. 
 
@@ -223,4 +226,64 @@ While a more complicated model tends to require more compute resources to train,
 
 We will be testing our hypothesis by looking at the accuracy rates for both the simpler model, and the more complex model. The model with a higher accuracy score will be the one recommended for use in the final report.
 
-The main challenge that could cause issues is our relative lack of experience using R for machine learning. While some in our group have experience using machine learning models, that experience is in Python. This is not an impossible obstacle to overcome, since we will be learning about modelling packages in R later in the course.
+The main challenge that could cause issues is our relative lack of experience using R for machine learning. While some in our group have experience using machine learning models, that experience is in Python. This isn't an impossible obstacle to overcome, since we will be learning about modelling packages in R later in the course.
+
+
+
+## Model Implementation
+
+In this section, we will be discussing implementing the two models chosen for this project, Linear Regression and Random Forest Regression.
+
+### Data Preprocessing
+
+Before we can start building models, we need to prepare our data for the model building process. To start we create a data.frame that contains a subset of the dataset that includes both the pizza information and the store information. In order to have a response variable to build a model with, we will create a new column, avgPrice, that adds the minimum and maximum prices and divides by the number of menu items. Since we don't have the number of menu items, we can make an educated guess that it will be between 5 and 10 menu items. 
+
+```{r data preprocess}
+set.seed(42)
+pizza_info_modelling <- pizza %>% 
+  select(id, address, categories, primaryCategories, 
+         city, keys, latitude, longitude, name, postalCode, 
+         province, priceRangeMin, priceRangeMax)
+
+pizza_info_modelling$city <- as.factor(pizza_info_modelling$city)
+
+pizza_info_modelling$menuItems <- sample(5:10, size = nrow(pizza_info_modelling), replace = TRUE)
+
+pizza_info_modelling$avgPrice <- (pizza_info_modelling$priceRangeMin + pizza_info_modelling$priceRangeMax) / (pizza_info_modelling$menuItems)
+
+```
+
+### Linear Regression
+
+Now that we have a response variable to test against, we can look at the first model we tested for the project, Linear Regression. Linear Regression is a model that can be trained and deployed quickly, requiring far less compute resources than other, more complicated models. Because we are looking at the geographic location for how to price an average item from a pizza restraunt, it makes sense to examine the three location based variables in our data; city, state, and ZIP code.
+
+```{r linear regression}
+linear_model <- lm(avgPrice ~ city + province + postalCode, data = pizza_info_modelling)
+```
+
+
+### Random Forest Regression
+
+Much like the Linear Regression model, the Random Forest will examine the relationship between the response variable and the dependent variables. Unlike with linear regression, random forests won't work with factors that have greater than 52 levels. For the purposes of the project, it means we are unable to use the city parameter from our data.
+
+```{r random forest regression}
+random_forest <- randomForest(avgPrice ~ province + postalCode, data = pizza_info_modelling, na.action = na.omit)
+```
+
+### Model Comparison
+
+For the purposes of comparing the two models, we will look at the Mean Squared Error for both the Linear Regression model, and the Random Forest model. In the case of the Random Forest model, we need to look at the final element in the array mse, as it contains the cumulative MSE for the entire forest.
+
+```{r model comparison}
+rf_mse <- tail(random_forest$mse, 1)
+linear_mse <- mean(linear_model$residuals^2)
+
+# in order to plot, we need to create a new data.frame
+plot_df <- data.frame(model = c('Linear Model', 'Random Forest'), MSE = c(linear_mse, rf_mse))
+
+ggplot(data = plot_df, aes(x = model, y = MSE, fill = model)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Mean Squared Error for Models")
+```
+
+As we can see from the plot, the Linear Model has a lower Mean Squared Error than the Random Forest. However, we cannot necessarily infer that the Linear Model would be the better choice, as we were not able to use all of the data. This isn't necessarily a weakness in the model, but rather would require a greater investment in data engineering, in order to parse the city column into a form that the model would accept.
