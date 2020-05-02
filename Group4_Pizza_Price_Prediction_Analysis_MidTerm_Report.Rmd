@@ -1,6 +1,6 @@
 ---
 title: "Pizza price prediction and Location analysis"
-subtitle: "Midterm Report"
+subtitle: "Final Report"
 author: "KunJung Lin, Roshan Kotian, Mark Trovinger"
 date: "3/18/2020"
 output: 
@@ -52,7 +52,6 @@ library(sqldf)
 library(randomForest)
 library(knitr)
 library(kableExtra)
-
 ```
 
 ```{r read_data, message=FALSE, warning=FALSE}
