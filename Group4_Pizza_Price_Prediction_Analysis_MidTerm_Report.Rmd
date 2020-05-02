@@ -228,8 +228,6 @@ We will be testing our hypothesis by looking at the accuracy rates for both the 
 
 The main challenge that could cause issues is our relative lack of experience using R for machine learning. While some in our group have experience using machine learning models, that experience is in Python. This isn't an impossible obstacle to overcome, since we will be learning about modelling packages in R later in the course.
 
-
-
 # Model Implementation
 
 In this section, we will be discussing implementing the two models chosen for this project, Linear Regression and Random Forest Regression.
