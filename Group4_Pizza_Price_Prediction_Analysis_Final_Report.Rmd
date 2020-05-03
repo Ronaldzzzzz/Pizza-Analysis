@@ -217,7 +217,6 @@ ggplot(most_ordered_menu, aes(x = reorder(pizzaName, total_sold), y = total_sold
   coord_flip()
 ```
 
-
 # Model Proposal
 
 The goal of the predictive model will be used in pricing pizza. We hypothesize that a more complex model, such as Random Forest Regression, will have a greater accuracy in predicting pricing than a simpler model, such as Linear Regression. 

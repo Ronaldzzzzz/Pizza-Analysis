@@ -15,7 +15,7 @@ library(readr)
 library(sqldf)
 
 #####################################################
-   ## Loading dataset and tidying columns
+## Loading dataset and tidying columns
 #####################################################
 
 # Loading data set onto raw_pizza
