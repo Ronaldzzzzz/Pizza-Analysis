@@ -84,13 +84,13 @@ To tidy the dataset, we are following these step:
 
 ## Visualize the Data
 
-<img src="Group4_Pizza_Price_Prediction_Analysis_Final_Report_files/figure-gfm/visu_plot1-1.png" style="display: block; margin: auto;" />
+![plot_1](https://github.com/Ronaldzzzzz/Pizza-Analysis/blob/master/image/visu_plot1-1.png)
 
-<img src="Group4_Pizza_Price_Prediction_Analysis_Final_Report_files/figure-gfm/visu_plot2-1.png" style="display: block; margin: auto;" />
+![plot_2](https://github.com/Ronaldzzzzz/Pizza-Analysis/blob/master/image/visu_plot2-1.png)
 
-<img src="Group4_Pizza_Price_Prediction_Analysis_Final_Report_files/figure-gfm/visu_plot3-1.png" style="display: block; margin: auto;" />
+![plot_3](https://github.com/Ronaldzzzzz/Pizza-Analysis/blob/master/image/visu_plot3-1.png)
 
-<img src="Group4_Pizza_Price_Prediction_Analysis_Final_Report_files/figure-gfm/visu_plot4-1.png" style="display: block; margin: auto;" />
+![plot_4](https://github.com/Ronaldzzzzz/Pizza-Analysis/blob/master/image/visu_plot4-1.png)
 
 ## Model Proposal
 
@@ -157,7 +157,7 @@ random_forest <- randomForest(avgPrice ~ province + postalCode, data = pizza_inf
 For the purposes of comparing the two models, we will look at the Mean Squared Error for both the Linear Regression model, and the Random Forest model.
 In the case of the Random Forest model, we need to look at the final element in the array mse, as it contains the cumulative MSE for the entire forest.
 
-![](Group4_Pizza_Price_Prediction_Analysis_Final_Report_files/figure-gfm/model%20comparison-1.png)
+![model_comparison](https://github.com/Ronaldzzzzz/Pizza-Analysis/blob/master/image/model%20comparison-1.png)
 
 As we can see from the plot, the Linear Model has a lower Mean Squared Error than the Random Forest.
 However, we cannot necessarily infer that the Linear Model would be the better choice, as we were not able to use all of the data.
