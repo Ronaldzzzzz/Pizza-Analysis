@@ -3,11 +3,7 @@ title: "Pizza price prediction and Location analysis"
 subtitle: "Final Report"
 author: "KunJung Lin, Roshan Kotian, Mark Trovinger"
 date: "5/3/2020"
-output: 
-  pdf_document : 
-    toc: true
-    number_sections: true
-    toc_depth: 4
+output: rmarkdown::github_document
 ---
 
 <style>
